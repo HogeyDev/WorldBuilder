@@ -1,20 +1,42 @@
 import { ctx } from "./ui.js";
 import { earth_year } from "./time.js";
 
-export function text_topdown_max_width(text, x, y, width) {
+export function text_size(fontStyle, text) {
+    ctx.font = fontStyle;
+    const metrics = ctx.measureText(text);
+    const actualHeight =
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+
+    return {
+        width: metrics.width,
+        height: actualHeight,
+    };
+}
+
+export function text_topleft_max_width(text, x, y, max_x, bg_col, fadesize) {
     const metrics = ctx.measureText(text);
     const actualHeight =
         metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
     const baselineY = y + actualHeight - metrics.actualBoundingBoxDescent;
 
+    const width = max_x - x;
+
     const gradient = ctx.createLinearGradient(
-        x + width - radius,
+        max_x - fadesize,
         0,
-        x + width,
+        max_x,
         0,
     );
-    gradient.addColorStop(0, "#44475a00");
-    gradient.addColorStop(1, "#44475aff");
+
+    let faded = bg_col;
+    if (faded.length == 7) { // includes '#', so length is 6 + 1 = 7
+        faded += "00";
+    } else {
+        faded[6] = "0";
+        faded[7] = "0";
+    }
+    gradient.addColorStop(0, faded);
+    gradient.addColorStop(1, bg_col);
 
     ctx.save();
     ctx.beginPath();
@@ -22,7 +44,7 @@ export function text_topdown_max_width(text, x, y, width) {
     ctx.clip();
     ctx.fillText(text, x, baselineY);
     ctx.fillStyle = gradient;
-    ctx.fillRect(x + width - radius, y, radius, actualHeight);
+    ctx.fillRect(x + width - fadesize, y, fadesize, actualHeight);
     ctx.restore();
 }
 

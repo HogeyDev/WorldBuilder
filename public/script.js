@@ -4,7 +4,7 @@ import { Moment, MomentEditor } from "./moment.js";
 import { draw_event } from "./draw_utils.js";
 import { keyboard } from "./keyboard.js";
 
-class MomentElement {
+export class MomentElement {
     constructor(x, y, width, height, title, contents, date, importance) {
         this.moment = new Moment(title, contents, date, importance);
         this.interactor = new Interactor(x, y, width, height,
@@ -123,19 +123,28 @@ function update_mode() {
             break;
         }
         case UIMode.MomentOpened: {
-            if (keyboard.get_key("d").edge.down) {
+            if (keyboard.get_key("Tab").edge.down) {
                 set_mode(UIMode.Normal);
+                close_moment();
             }
             break;
         }
     }
 }
 
+let editor = null;
 export function open_moment(index) {
     set_mode(UIMode.MomentOpened);
+    editor = new MomentEditor(moments[index]);
+}
+export function close_moment() {
+    set_mode(UIMode.Normal);
+    editor = null;
+}
+export function update_editor() {
+    if (editor === null || editor === undefined) return false; // no editor is initialized, or it is not processable.
 
-    let editor = new MomentEditor(moments[0]);
-    ui_elements.unshift();
+    return true;
 }
 
 function tick() {
@@ -145,26 +154,33 @@ function tick() {
     update_mode();
     process_world_drag();
 
-    const ui_interact = ui_elements.some(x => {
-        // x.interactor.draw_hitbox("#ff5555");
-        return x.interactor.update(mouse);
-    });
+    const editor_open = update_editor();
+    if (!editor_open) {
+        const ui_interact = ui_elements.some(x => {
+            // x.interactor.draw_hitbox("#ff5555");
+            return x.interactor.update(mouse);
+        });
 
-    if (!ui_interact) {
-        for (let i = 0; i < moments.length; i++) {
-            if (moments[i].interactor.update(mouse)) {
-                moments.unshift(moments.splice(i, 1)[0]);
-                break;
+        if (!ui_interact) {
+            for (let i = 0; i < moments.length; i++) {
+                if (moments[i].interactor.update(mouse)) {
+                    moments.unshift(moments.splice(i, 1)[0]);
+                    break;
+                }
             }
         }
-    }
 
-    if (keyboard.get_key("f").edge.down) {
-        open_moment(0);
+        if (keyboard.get_key("f").edge.down) {
+            open_moment(0);
+        }
     }
 
     draw_moments();
     draw_ui(); // drawing second ensures ui is always on top
+    if (editor_open) {
+        editor.update();
+        editor.draw();
+    }
 
     mouse.state_edge.lmb = false;
     mouse.state_edge.rmb = false;

@@ -27,6 +27,7 @@ export let keyboard = {
 
 
 document.onkeydown = (e) => {
+    e.preventDefault();
     if (e.repeat) return; // prevent auto repeat from bullying our custom stuff
     keyboard.state[e.key] = {
         active: true,
@@ -37,6 +38,7 @@ document.onkeydown = (e) => {
     };
 }
 document.onkeyup = (e) => {
+    e.preventDefault();
     if (e.repeat) return; // prevent auto repeat from bullying our custom stuff
     keyboard.state[e.key] = {
         active: false,

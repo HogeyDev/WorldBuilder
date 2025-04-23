@@ -23,15 +23,16 @@ export class Interactor {
         ctx.fillStyle = color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
-    update(mouse) {
+    update(mouse, click_params=undefined, mouse_locale="worldspace") {
         let focused = false;
 
         if (
             mouse.state_edge.lmb && mouse.state.lmb &&
-            mouse.worldspace.x >= this.x && mouse.worldspace.x < this.x + this.width &&
-            mouse.worldspace.y >= this.y && mouse.worldspace.y < this.y + this.height
+            mouse[mouse_locale].x >= this.x && mouse[mouse_locale].x < this.x + this.width &&
+            mouse[mouse_locale].y >= this.y && mouse[mouse_locale].y < this.y + this.height
         ) {
-            this.click_callback(mouse);
+            if (click_params === undefined) this.click_callback(mouse);
+            else this.click_callback(mouse, click_params);
             focused = true;
         }
         switch (ui_mode) {
