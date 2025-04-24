@@ -1,4 +1,4 @@
-import { UIMode, ctx, ui_mode } from "./ui.js";
+import { UIMode, ctx, request_frame, ui_mode } from "./ui.js";
 
 export class Interactor {
     constructor(x, y, width, height, draw_callback=function(){}, click_callback=function(_){}, draggable=false) {
@@ -34,6 +34,7 @@ export class Interactor {
             if (click_params === undefined) this.click_callback(mouse);
             else this.click_callback(mouse, click_params);
             focused = true;
+            request_frame();
         }
         switch (ui_mode) {
             case UIMode.Normal: {
@@ -69,6 +70,7 @@ export class Interactor {
                     this.x = mouse.worldspace.x - this.drag_origins.mouse.x + this.drag_origins.interactor.x;
                     this.y = mouse.worldspace.y - this.drag_origins.mouse.y + this.drag_origins.interactor.y;
                     focused = true;
+                    request_frame();
                 }
                 break;
             }

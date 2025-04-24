@@ -64,6 +64,14 @@ document.onmouseup = (e) => {
     }
 }
 
+export let draw_frame = true;
+export function request_frame() {
+    draw_frame = true;
+}
+export function clear_frame_request() {
+    draw_frame = false;
+}
+
 export const UIMode = Object.freeze({
     Normal: 0,
     Dragging: 1,

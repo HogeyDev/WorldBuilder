@@ -1,4 +1,4 @@
-import { mouse, canvas, ctx, UIMode, ui_mode, set_mode, mode_to_color } from "./ui.js";
+import { mouse, canvas, ctx, UIMode, ui_mode, set_mode, mode_to_color, draw_frame, clear_frame_request, request_frame } from "./ui.js";
 import { Interactor } from "./interactor.js";
 import { Moment, MomentEditor } from "./moment.js";
 import { draw_event } from "./draw_utils.js";
@@ -53,6 +53,7 @@ function process_world_drag() {
         if (world_drag_origins.active) {
             origin_offset.x = world_drag_origins.mouse.x - mouse.screenspace.x + world_drag_origins.world.x;
             origin_offset.y = world_drag_origins.mouse.y - mouse.screenspace.y + world_drag_origins.world.y;
+            request_frame();
         }
     }
 }
@@ -113,12 +114,14 @@ function update_mode() {
         case UIMode.Normal: {
             if (keyboard.get_key("d").edge.down) {
                 set_mode(UIMode.Dragging);
+                request_frame();
             }
             break;
         }
         case UIMode.Dragging: {
             if (keyboard.get_key("d").edge.down) {
                 set_mode(UIMode.Normal);
+                request_frame();
             }
             break;
         }
@@ -136,10 +139,12 @@ let editor = null;
 export function open_moment(index) {
     set_mode(UIMode.MomentOpened);
     editor = new MomentEditor(moments[index]);
+    request_frame();
 }
 export function close_moment() {
     set_mode(UIMode.Normal);
     editor = null;
+    request_frame();
 }
 export function update_editor() {
     if (editor === null || editor === undefined) return false; // no editor is initialized, or it is not processable.
@@ -147,15 +152,31 @@ export function update_editor() {
     return true;
 }
 
-function tick() {
+function draw() {
+    if (!draw_frame) {
+        window.requestAnimationFrame(draw);
+        return;
+    } else clear_frame_request();
+    // console.log("new frame just dropped");
+
     ctx.fillStyle = "#282a36";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    draw_moments();
+    draw_ui(); // drawing second ensures ui is always on top
+    if (editor !== null && editor !== undefined) {
+        editor.update();
+        editor.draw();
+    }
+
+    window.requestAnimationFrame(draw);
+}
+
+function tick() {
     update_mode();
     process_world_drag();
 
-    const editor_open = update_editor();
-    if (!editor_open) {
+    if (!update_editor()) {
         const ui_interact = ui_elements.some(x => {
             // x.interactor.draw_hitbox("#ff5555");
             return x.interactor.update(mouse);
@@ -175,13 +196,6 @@ function tick() {
         }
     }
 
-    draw_moments();
-    draw_ui(); // drawing second ensures ui is always on top
-    if (editor_open) {
-        editor.update();
-        editor.draw();
-    }
-
     mouse.state_edge.lmb = false;
     mouse.state_edge.rmb = false;
     keyboard.clear_edges();
@@ -190,3 +204,4 @@ function tick() {
 }
 
 window.requestAnimationFrame(tick);
+window.requestAnimationFrame(draw);
