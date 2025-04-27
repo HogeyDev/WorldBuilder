@@ -95,6 +95,10 @@ export class UITextEditor {
                 this.cursor_index = Math.max(0, this.cursor_index - 1);
             }
             text_edited = true;
+        } else if (keyboard.get_key("Enter").edge.down) {
+                this.cursor_index++;
+                this.content = this.content.slice(0, this.cursor_index - (this.wrapped_text.lines.length - 1) - 1) + '\n' + this.content.slice(this.cursor_index - (this.wrapped_text.lines.length - 1) - 1);
+                text_edited = true;
         } else for (const c of typeable) {
             if (keyboard.get_key(c).edge.down) {
                 this.cursor_index++;
@@ -108,6 +112,8 @@ export class UITextEditor {
             this.wrapped_text = wrap_text_by_word(this.font, this.content, this.width);
             if (this.wrapped_text.lines.length > old_line_count) {
                 this.cursor_index++;
+            } else if (this.wrapped_text.lines.length < old_line_count) {
+                this.cursor_index--;
             }
             this.calculate_cursor_pos();
         }

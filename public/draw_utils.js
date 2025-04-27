@@ -145,29 +145,53 @@ export function draw_multiline_text_topleft(lines, x, y, padding=4) {
     }
 }
 
-export function wrap_text(font, text, width) {
+export function wrap_text(font, text, width, padding=4) {
     const lines = [];
+    const sizes = [];
+    const offsets = [];
 
     let i = 0;
     let accum = {
         t: "",
         l: 0,
+        s: 0,
+        m: 0,
     };
     while (i < text.length) {
         const current = text[i];
-        const current_width = text_size(font, current).width;
-        if (accum.l + current_width >= width || current == '\n') {
+        const current_size = text_size(font, current);
+        if (accum.l + current_size.width >= width || current == '\n') {
             lines.push(accum.t);
+            sizes.push(accum.s);
+            if (offsets.length) offsets.push(offsets[offsets.length - 1] + accum.m + padding);
+            else offsets.push(accum.m + padding);
+
             accum.t = "";
             accum.l = 0;
+            accum.s = 0;
+            accum.m = 0;
         }
         accum.t += current;
-        accum.l += current_width;
+        accum.l += current_size.width;
+        accum.s += current.length;
+        const th = text_size(font, accum.t).height;
+        if (accum.m < th) {
+            accum.m = th;
+        }
         i++;
     }
     lines.push(accum.t);
+    sizes.push(accum.s);
+    offsets.push(offsets[offsets.length - 1] ?? 0 + accum.m + padding);
 
-    return lines;
+    offsets.unshift(0);
+    offsets.pop();
+
+    return {
+        lines: lines,
+        sizes: sizes,
+        offsets: offsets,
+    };
 }
 
 export function wrap_text_by_word(font, text, width, padding=4) {
@@ -187,13 +211,11 @@ export function wrap_text_by_word(font, text, width, padding=4) {
     while (i < words.length) {
         const current = words[i];
         const current_size = text_size(font, current);
-        if (accum.l + current_size.width >= width || current == '\n') {
+        if (accum.l + current_size.width >= width) {
             lines.push(accum.t);
             sizes.push(accum.s);
-            if (offsets.length)
-                offsets.push(offsets[offsets.length - 1] + accum.m + padding);
-            else
-                offsets.push(accum.m + padding);
+            if (offsets.length) offsets.push(offsets[offsets.length - 1] + accum.m + padding);
+            else offsets.push(accum.m + padding);
 
             accum.t = "";
             accum.l = 0;
@@ -205,6 +227,17 @@ export function wrap_text_by_word(font, text, width, padding=4) {
         accum.s += current.length;
         if (accum.m < current_size.height) {
             accum.m = current_size.height;
+        }
+        if (current[current.length - 1] == '\n') {
+            lines.push(accum.t);
+            sizes.push(accum.s);
+            if (offsets.length) offsets.push(offsets[offsets.length - 1] + accum.m + padding);
+            else offsets.push(accum.m + padding);
+
+            accum.t = "";
+            accum.l = 0;
+            accum.s = 0;
+            accum.m = 0;
         }
         i++;
     }
