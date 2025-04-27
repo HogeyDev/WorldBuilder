@@ -18,6 +18,7 @@ export class Interactor {
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.stroke();
+        request_frame();
     }
     fill_hitbox(color) {
         ctx.fillStyle = color;

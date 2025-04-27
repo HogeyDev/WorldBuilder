@@ -28,8 +28,11 @@ function get_clean_key_obj(dirty) {
     );
 }
 
+function is_whitelisted_keybind(e) { // mostly just debug stuff
+    return (e.ctrlKey && ["R", "I"].includes(e.key));
+}
 document.onkeydown = (e) => {
-    e.preventDefault();
+    if (!is_whitelisted_keybind(e)) e.preventDefault();
     if (e.repeat) return; // prevent auto repeat from bullying our custom stuff
     keyboard.state[e.key] = get_clean_key_obj(keyboard.state[e.key]);
     keyboard.state[e.key].active = true;

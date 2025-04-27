@@ -13,6 +13,15 @@ export function text_size(fontStyle, text) {
     };
 }
 
+export function text_topleft(text, x, y) {
+    const metrics = ctx.measureText(text);
+    const actualHeight =
+        metrics.actualBoundingBoxAscent + metrics.actualBoundingBoxDescent;
+    const baselineY = y + actualHeight - metrics.actualBoundingBoxDescent;
+
+    ctx.fillText(text, x, baselineY);
+}
+
 export function text_topleft_max_width(text, x, y, max_x, bg_col, fadesize) {
     const metrics = ctx.measureText(text);
     const actualHeight =
@@ -128,6 +137,87 @@ export function draw_event(event, x, y, width, height, radius, border) {
     text_topcenter_max_width(event.contents, x + width / 2, y + radius + 40 + 28, x + radius, x + width - radius * 2, "#44475a", radius);
 }
 
-export function draw_events(events) {
-    const sorted = events.toSorted((a, b) => a.date - b.date);
+export function draw_multiline_text_topleft(lines, x, y, padding=4) {
+    let accum = 0;
+    for (const line of lines) {
+        text_topleft(line, x, y + accum);
+        accum += text_size(ctx.font, line).height + padding;
+    }
+}
+
+export function wrap_text(font, text, width) {
+    const lines = [];
+
+    let i = 0;
+    let accum = {
+        t: "",
+        l: 0,
+    };
+    while (i < text.length) {
+        const current = text[i];
+        const current_width = text_size(font, current).width;
+        if (accum.l + current_width >= width || current == '\n') {
+            lines.push(accum.t);
+            accum.t = "";
+            accum.l = 0;
+        }
+        accum.t += current;
+        accum.l += current_width;
+        i++;
+    }
+    lines.push(accum.t);
+
+    return lines;
+}
+
+export function wrap_text_by_word(font, text, width, padding=4) {
+    const lines = [];
+    const sizes = [];
+    const offsets = [];
+
+    const words = text.split(/(?<=\s)/);
+
+    let i = 0;
+    let accum = {
+        t: "",
+        l: 0,
+        s: 0,
+        m: 0,
+    };
+    while (i < words.length) {
+        const current = words[i];
+        const current_size = text_size(font, current);
+        if (accum.l + current_size.width >= width || current == '\n') {
+            lines.push(accum.t);
+            sizes.push(accum.s);
+            if (offsets.length)
+                offsets.push(offsets[offsets.length - 1] + accum.m + padding);
+            else
+                offsets.push(accum.m + padding);
+
+            accum.t = "";
+            accum.l = 0;
+            accum.s = 0;
+            accum.m = 0;
+        }
+        accum.t += current;
+        accum.l += current_size.width;
+        accum.s += current.length;
+        if (accum.m < current_size.height) {
+            accum.m = current_size.height;
+        }
+        i++;
+    }
+    lines.push(accum.t);
+    sizes.push(accum.s);
+    offsets.push(offsets[offsets.length - 1] ?? 0 + accum.m + padding);
+
+    offsets.unshift(0);
+    offsets.pop();
+
+    return {
+        lines: lines,
+        sizes: sizes,
+        offsets: offsets,
+    };
 }

@@ -1,9 +1,16 @@
-import { origin_offset } from "./script.js";
+import { mode_bar, MODE_BAR_WIDTH, origin_offset } from "./script.js";
 
 export const canvas = document.querySelector("canvas");
 export const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
+window.onresize = () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    mode_bar.x = canvas.width - MODE_BAR_WIDTH;
+    request_frame();
+}
 
 export let mouse = {
     screenspace: {

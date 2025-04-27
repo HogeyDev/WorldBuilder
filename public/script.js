@@ -67,13 +67,16 @@ class UIElement { // the whole point is that it's positioned STATICLY, so modes 
     }
 }
 
+export const MODE_BAR_WIDTH = 5;
+export let mode_bar = new UIElement(
+    canvas.width - MODE_BAR_WIDTH, 0, MODE_BAR_WIDTH, canvas.height,
+    function(self) {
+        ctx.fillStyle = mode_to_color(ui_mode);
+        ctx.fillRect(self.x, self.y, self.width, self.height);
+    },
+);
 export let ui_elements = [
-    new UIElement(canvas.width - 5, 0, 5, canvas.height,
-        function(self) {
-            ctx.fillStyle = mode_to_color(ui_mode);
-            ctx.fillRect(self.x, self.y, self.width, self.height);
-        },
-    ),
+    mode_bar,
 ];
 
 let moments = [
@@ -100,6 +103,7 @@ function draw_moments() {
         ctx.strokeStyle = "#ffffffa0";
         ctx.lineWidth = C_WIDTH;
         ctx.stroke();
+        request_frame();
     }
 }
 
@@ -147,16 +151,19 @@ export function close_moment() {
     request_frame();
 }
 export function update_editor() {
-    if (editor === null || editor === undefined) return false; // no editor is initialized, or it is not processable.
+    if (editor === null || editor === undefined) {
+        return false; // no editor is initialized, or it is not processable.
+    }
 
+    editor.update();
     return true;
 }
 
 function draw() {
-    if (!draw_frame) {
-        window.requestAnimationFrame(draw);
-        return;
-    } else clear_frame_request();
+    // if (!draw_frame) {
+    //     window.requestAnimationFrame(draw);
+    //     return;
+    // } else clear_frame_request();
     // console.log("new frame just dropped");
 
     ctx.fillStyle = "#282a36";
